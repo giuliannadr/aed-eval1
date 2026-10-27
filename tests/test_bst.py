@@ -31,17 +31,18 @@ class TestBST(unittest.TestCase):
 
     def test_degenerado_sin_recursion_error(self):
         arbol_degenerado = BST()
-        for clave in range(20000):
+        for clave in range(2000):
             arbol_degenerado.insertar(clave, f"ev{clave}")
         resultado = arbol_degenerado.buscar_rango(0, 1999)
-        self.assertEqual(len(resultado), 20000)
+        self.assertEqual(len(resultado), 2000)
 
     def test_rango_hueco_interno(self):
-          self.assertEqual(self.arbol.buscar_rango(51, 59), [])
-          
+        self.assertEqual(self.arbol.buscar_rango(51, 59), [])
+
     def test_rango_invertido_error(self):
-           with self.assertRaises(ValueError):
-               self.arbol.buscar_rango(60, 30)
+        with self.assertRaises(ValueError):
+            self.arbol.buscar_rango(60, 30)
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -25,10 +25,9 @@ class TestEventStore(unittest.TestCase):
         self.assertEqual(self.store.buscar_por_id(2), self.e2)
 
     def test_buscar_por_rango(self):
-        self.assertEqual(
-            sorted(self.store.buscar_por_rango(150, 300)), sorted([self.e2, self.e3])
-        )
-        
+        resultado = self.store.buscar_por_rango(150, 300)
+        self.assertEqual(sorted(resultado, key=lambda e: e.id), [self.e2, self.e3])
+
     def test_rechazo_no_modifica_indices(self):
         repetido = Event(1, 999, "seguridad", 2, "x", "D", "E")
         with self.assertRaises(ValueError):
