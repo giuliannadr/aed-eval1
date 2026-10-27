@@ -36,6 +36,9 @@ class TestBST(unittest.TestCase):
         resultado = arbol_degenerado.buscar_rango(0, 9999)
         self.assertEqual(len(resultado), 10000)
 
+    def test_rango_invertido_error(self):
+           with self.assertRaises(ValueError):
+               self.arbol.buscar_rango(60, 30)
 
 if __name__ == "__main__":
     unittest.main()

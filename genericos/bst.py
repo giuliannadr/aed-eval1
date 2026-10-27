@@ -26,8 +26,11 @@ class BST:
         self._raiz = None
 
     def insertar(self, clave, valor):
-        """Inserta un valor bajo una clave. Iterativo para no depender del
-        límite de recursión de Python en árboles degenerados."""
+        """Inserta un valor bajo una clave. O(h).
+
+        Iterativo para no depender del límite de recursión de Python
+        en árboles degenerados.
+        """
         if self._raiz is None:
             self._raiz = _Nodo(clave, valor)
             return
@@ -54,7 +57,16 @@ class BST:
         Usa la propiedad de orden para podar: no entra a subárboles que
         no pueden tener claves dentro del rango. El orden del resultado
         no está garantizado.
+
+        Costo: O(h + k), con h = altura del árbol y k = cantidad de
+        resultados. Con el árbol degenerado, h = n.
+
+        Raises:
+            ValueError: si desde es mayor que hasta.
         """
+        if desde > hasta:
+            raise ValueError("desde no puede ser mayor que hasta")
+
         resultado = []
         pila = [self._raiz]
         while pila:
