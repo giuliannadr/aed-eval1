@@ -70,6 +70,9 @@ class EventStore:
         """Devuelve los eventos con timestamp entre desde y hasta (inclusive).
 
         Usa el BST por timestamp: O(h + k). El orden no está garantizado.
+
+        Raises:
+            ValueError: si desde es mayor que hasta.
         """
         return self._por_timestamp.buscar_rango(desde, hasta)
 

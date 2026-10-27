@@ -1,34 +1,30 @@
 class Index:
     """Índice secundario por una clave que puede repetirse.
 
-    Internamente es un dict {clave: [eventos]}: varios eventos pueden
-    compartir la misma clave (por ejemplo, la misma categoría), por eso
-    el valor es una lista y no un evento suelto.
-
-    Se usa para claves repetidas (category, origin). El índice por id,
-    que es único, lo maneja EventStore con un dict simple.
+    Internamente es un dict {clave: [valores]}: varios valores pueden
+    compartir la misma clave, por eso cada clave guarda una lista.
 
     Args:
-        key (callable): función que recibe un Event y devuelve la clave
-            por la que se indexa. Ej: lambda e: e.category
+        key (callable): función que recibe un valor y devuelve la clave
+            por la que se indexa.
     """
 
     def __init__(self, key):
         self._key = key
         self._datos = {}
 
-    def agregar(self, evento):
-        """Agrega un evento al índice. O(1) promedio."""
-        clave = self._key(evento)
+    def agregar(self, valor):
+        """Agrega un valor al índice. O(1) promedio."""
+        clave = self._key(valor)
         if clave not in self._datos:
             self._datos[clave] = []
-        self._datos[clave].append(evento)
+        self._datos[clave].append(valor)
 
     def buscar(self, clave):
-        """Devuelve los eventos con esa clave.
+        """Devuelve los valores con esa clave, en orden de inserción.
 
         Devuelve una copia, así modificarla desde afuera no altera el
-        índice (cuesta O(k), con k = cantidad de eventos de esa clave).
+        índice (cuesta O(k), con k = cantidad de valores de esa clave).
         Si la clave no existe, devuelve una lista vacía.
         """
         return self._datos.get(clave, []).copy()

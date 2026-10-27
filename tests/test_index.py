@@ -24,25 +24,27 @@ class TestEventStore(unittest.TestCase):
     def test_buscar_por_id(self):
         self.assertEqual(self.store.buscar_por_id(2), self.e2)
 
-    def test_id_duplicado_rechazado(self):
+    def test_buscar_por_rango(self):
+        self.assertEqual(
+            sorted(self.store.buscar_por_rango(150, 300)), sorted([self.e2, self.e3])
+        )
+        
+    def test_rechazo_no_modifica_indices(self):
         repetido = Event(1, 999, "seguridad", 2, "x", "D", "E")
         with self.assertRaises(ValueError):
             self.store.agregar(repetido)
+        # Ningún índice tiene que haber cambiado:
+        self.assertEqual(len(self.store), 3)
+        self.assertEqual(self.store.buscar_por_id(1), self.e1)
+        self.assertEqual(self.store.buscar_por_categoria("seguridad"), [])
+        self.assertEqual(self.store.buscar_por_origen("D"), [])
+        self.assertEqual(self.store.buscar_por_rango(999, 999), [])
 
     def test_id_inexistente_none(self):
         self.assertIsNone(self.store.buscar_por_id(999))
 
     def test_buscar_por_origen(self):
         self.assertEqual(self.store.buscar_por_origen("A"), [self.e1, self.e3])
-
-
-    def test_reject_no_modifica_indices(self):
-        repetido = Event(1, 999, "seguridad", 2, "x", "D", "E")
-        with self.assertRaises(ValueError):
-            self.store.agregar(repetido)
-        self.assertEqual(len(self.store), 3)
-        self.assertEqual(self.store.buscar_por_categoria("seguridad"), [])
-
 
     def test_modificar_copia_no_altera_indice(self):
         copia = self.store.buscar_por_categoria("red")
