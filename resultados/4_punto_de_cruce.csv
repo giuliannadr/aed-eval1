@@ -1,9 +1,15 @@
 k,caso,tiempo_us
-1,k secuenciales,244.6
-1,ordenar + k binarias,670.8
-10,k secuenciales,2579.5
-10,ordenar + k binarias,1389.8
-100,k secuenciales,23172.7
-100,ordenar + k binarias,1137.4
-1000,k secuenciales,293324.1
-1000,ordenar + k binarias,2674.3
+1,k secuenciales,287.925
+1,ordenar + k binarias,1140.96
+2,k secuenciales,706.85
+2,ordenar + k binarias,651.05
+3,k secuenciales,626.415
+3,ordenar + k binarias,663.73
+5,k secuenciales,1052.74
+5,ordenar + k binarias,655.29
+10,k secuenciales,2026.825
+10,ordenar + k binarias,659.155
+100,k secuenciales,21911.3
+100,ordenar + k binarias,824.8
+1000,k secuenciales,234186.6
+1000,ordenar + k binarias,2266.5

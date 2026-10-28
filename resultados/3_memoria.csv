@@ -1,10 +1,10 @@
 n,estructura,bytes
-1000,lista (sin indice),8056
+1000,lista (sin indice),8856
 1000,dict por id,36952
 1000,indice por categoria,9232
-10000,lista (sin indice),80056
+10000,lista (sin indice),85176
 10000,dict por id,294992
 10000,indice por categoria,83152
-100000,lista (sin indice),800056
+100000,lista (sin indice),800984
 100000,dict por id,5242960
 100000,indice por categoria,865264

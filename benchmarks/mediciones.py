@@ -1,6 +1,7 @@
 """Mediciones empíricas reproducibles para el informe.
 
 Ejecutar desde la raíz:  python -m benchmarks.mediciones
+(Tarda varios minutos: los casos O(n²) son lentos a propósito.)
 
 Genera un CSV por experimento en resultados/ e imprime cada tabla.
 Los tamaños se duplican y la columna "cociente" es t(2n) / t(n):
@@ -35,8 +36,9 @@ SEMILLA = 42
 def medir(funcion, number=1, repeticiones=3):
     """Tiempo en microsegundos de una ejecución de funcion.
 
-    Corre varias tandas con timeit y se queda con la mínima: es la
-    medición menos afectada por otros procesos de la máquina.
+    Ejecuta funcion `number` veces por tanda (más veces para operaciones
+    rápidas, así el ruido del sistema pesa menos), corre varias tandas
+    y se queda con la mínima: la menos afectada por otros procesos.
     """
     mejor = min(timeit.repeat(funcion, repeat=repeticiones, number=number))
     return round(mejor / number * 1_000_000, 3)
@@ -66,6 +68,14 @@ def guardar_y_mostrar(nombre, filas):
         print(" | ".join(str(fila[c]) for c in columnas))
 
 
+def por_timestamp(evento):
+    return evento.timestamp
+
+
+def ordenar_con_sorted(lista, key):
+    return sorted(lista, key=key)
+
+
 def exp_busqueda():
     """1. Secuencial vs binaria vs bisect, buscando una clave ausente (peor caso)."""
     filas = []
@@ -88,19 +98,19 @@ def exp_ordenamiento():
 
     Cada ejecución recibe una copia (list(eventos)) por si alguna
     implementación ordenara en el lugar: copiar es O(n), igual para todos.
+    Los algoritmos rápidos se ejecutan más veces por tanda para reducir ruido.
     """
     filas = []
-    por_timestamp = lambda e: e.timestamp
     algoritmos = (
-        ("insercion", insercion),
-        ("mergesort", mergesort),
-        ("sorted", lambda lista, key: sorted(lista, key=key)),
+        ("insercion", insercion, 1),
+        ("mergesort", mergesort, 10),
+        ("sorted", ordenar_con_sorted, 100),
     )
     for orden in ("aleatorio", "ordenado", "invertido"):
         for n in (250, 500, 1000, 2000):
             eventos = generar_eventos(n, semilla=SEMILLA, orden=orden)
-            for nombre, ordenar in algoritmos:
-                t = medir(lambda: ordenar(list(eventos), key=por_timestamp))
+            for nombre, ordenar, veces in algoritmos:
+                t = medir(lambda: ordenar(list(eventos), key=por_timestamp), number=veces)
                 filas.append({"n": n, "caso": f"{nombre}-{orden}", "tiempo_us": t})
     return con_cocientes(filas)
 
@@ -122,27 +132,33 @@ def exp_memoria():
             sys.getsizeof(lista) for lista in por_categoria.values()
         )
         filas.append({"n": n, "estructura": "lista (sin indice)",
-                      "bytes": sys.getsizeof(list(eventos))})
+                      "bytes": sys.getsizeof(eventos)})
         filas.append({"n": n, "estructura": "dict por id", "bytes": sys.getsizeof(por_id)})
         filas.append({"n": n, "estructura": "indice por categoria", "bytes": bytes_categoria})
     return filas
 
 
 def exp_punto_de_cruce():
-    """4. k búsquedas secuenciales vs ordenar una vez + k binarias."""
+    """4. k búsquedas secuenciales vs ordenar una vez + k binarias.
+
+    Los objetivos son aleatorios (algunos están y otros no): mide el caso
+    promedio. Los k chicos se ejecutan más veces por tanda (son rápidos).
+    """
     filas = []
     n = 5_000
     rng = random.Random(SEMILLA)
     datos = [rng.randint(0, 10 * n) for _ in range(n)]
-    for k in (1, 10, 100, 1_000):
+    for k in (1, 2, 3, 5, 10, 100, 1_000):
         objetivos = [rng.randint(0, 10 * n) for _ in range(k)]
+        veces = 20 if k <= 10 else 1
 
         def ordenar_y_buscar():
             ordenados = sorted(datos)
             return [busqueda_binaria(ordenados, x) for x in objetivos]
 
-        t_sec = medir(lambda: [busqueda_secuencial(datos, x) for x in objetivos])
-        t_bin = medir(ordenar_y_buscar)
+        t_sec = medir(lambda: [busqueda_secuencial(datos, x) for x in objetivos],
+                      number=veces)
+        t_bin = medir(ordenar_y_buscar, number=veces)
         filas.append({"k": k, "caso": "k secuenciales", "tiempo_us": t_sec})
         filas.append({"k": k, "caso": "ordenar + k binarias", "tiempo_us": t_bin})
     return filas
@@ -151,8 +167,11 @@ def exp_punto_de_cruce():
 def exp_indice_vs_recorrido():
     """5. Consulta con índice (dict / Index) vs recorrer la lista completa.
 
+    Por id se busca un id inexistente: peor caso de la secuencial.
+    Por categoría, el índice devuelve una copia de ~n/5 eventos, así que
+    también crece con n: el índice ahorra buscar, no entregar.
     El store se limita a 8.000 eventos porque cargar datos aleatorios en
-    el IndiceOrdenado cuesta O(n) por inserción (hallazgo para el informe).
+    el IndiceOrdenado cuesta O(n) por inserción.
     """
     filas = []
     for n in (1_000, 2_000, 4_000, 8_000):
@@ -160,11 +179,11 @@ def exp_indice_vs_recorrido():
         store = EventStore()
         for e in eventos:
             store.agregar(e)
-        objetivo = n // 2
+        ausente = -1
         casos = (
-            ("id-dict", lambda: store.buscar_por_id(objetivo), 10_000),
+            ("id-dict", lambda: store.buscar_por_id(ausente), 10_000),
             ("id-secuencial",
-             lambda: next((e for e in eventos if e.id == objetivo), None), 100),
+             lambda: next((e for e in eventos if e.id == ausente), None), 100),
             ("categoria-index", lambda: store.buscar_por_categoria("red"), 1_000),
             ("categoria-filtro",
              lambda: [e for e in eventos if e.category == "red"], 100),
@@ -176,7 +195,11 @@ def exp_indice_vs_recorrido():
 
 
 def exp_colas():
-    """6. Vaciar n elementos: list.pop(0) (O(n) cada uno) vs deque.popleft() (O(1))."""
+    """6. Vaciar n elementos: list.pop(0) (O(n) cada uno) vs deque.popleft() (O(1)).
+
+    La construcción de la estructura (O(n) en ambos casos) queda dentro de
+    la medición; no cambia la conclusión porque se compara O(n²) contra O(n).
+    """
     filas = []
     for n in (10_000, 20_000, 40_000, 80_000):
 
@@ -196,11 +219,16 @@ def exp_colas():
 
 
 def exp_bst():
-    """7. Construir BST vs IndiceOrdenado con datos aleatorios y ordenados,
-    y consulta por rango con cada uno. Con datos ordenados el BST se
-    degenera (M3 2.1) y la lista solo agrega al final."""
+    """7. BST vs IndiceOrdenado (lista + bisect).
+
+    Construcción con datos aleatorios y ordenados: con datos ordenados el
+    BST se degenera (M3 2.1) y la lista solo agrega al final.
+    Rango de ancho fijo (k constante): mide la búsqueda en sí, O(h) vs
+    O(log n). Rango proporcional (k ~ n/5): el costo lo domina entregar k.
+    """
     filas = []
     for n in (500, 1_000, 2_000, 4_000):
+        arboles = {}
         for orden in ("aleatorio", "ordenado"):
             eventos = generar_eventos(n, semilla=SEMILLA, orden=orden)
 
@@ -220,18 +248,25 @@ def exp_bst():
                           "tiempo_us": medir(construir_bst)})
             filas.append({"n": n, "caso": f"construir-lista-{orden}",
                           "tiempo_us": medir(construir_lista)})
+            arboles[orden] = construir_bst()
 
-        # Rango sobre las estructuras construidas con datos aleatorios
-        aleatorios = generar_eventos(n, semilla=SEMILLA)
-        arbol, indice = BST(), IndiceOrdenado()
-        for e in aleatorios:
-            arbol.insertar(e.timestamp, e)
-            indice.agregar(e.timestamp, e)
-        desde, hasta = 2 * n, 3 * n   # timestamps crecen ~5 por evento
-        filas.append({"n": n, "caso": "rango-BST",
-                      "tiempo_us": medir(lambda: arbol.buscar_rango(desde, hasta), number=100)})
-        filas.append({"n": n, "caso": "rango-bisect",
-                      "tiempo_us": medir(lambda: indice.buscar_rango(desde, hasta), number=100)})
+        indice = IndiceOrdenado()
+        for e in generar_eventos(n, semilla=SEMILLA, orden="ordenado"):
+            indice.agregar(e.timestamp, e)   # al final: O(1) por inserción
+
+        fijo = (2 * n, 2 * n + 50)          # timestamps crecen ~5 por evento
+        proporcional = (2 * n, 3 * n)
+        consultas = (
+            ("rango-fijo-BST-aleatorio", lambda: arboles["aleatorio"].buscar_rango(*fijo)),
+            ("rango-fijo-BST-ordenado", lambda: arboles["ordenado"].buscar_rango(*fijo)),
+            ("rango-fijo-bisect", lambda: indice.buscar_rango(*fijo)),
+            ("rango-prop-BST-aleatorio",
+             lambda: arboles["aleatorio"].buscar_rango(*proporcional)),
+            ("rango-prop-bisect", lambda: indice.buscar_rango(*proporcional)),
+        )
+        for nombre, consulta in consultas:
+            filas.append({"n": n, "caso": nombre,
+                          "tiempo_us": medir(consulta, number=100)})
     return con_cocientes(filas)
 
 

@@ -1,9 +1,9 @@
 n,caso,tiempo_us,cociente
-10000,list.pop(0),114224.4,
-10000,deque.popleft,701.7,
-20000,list.pop(0),769071.8,6.73
-20000,deque.popleft,1476.3,2.1
-40000,list.pop(0),3135753.0,4.08
-40000,deque.popleft,1987.5,1.35
-80000,list.pop(0),2913313.8,0.93
-80000,deque.popleft,12802.7,6.44
+10000,list.pop(0),162550.6,
+10000,deque.popleft,575.4,
+20000,list.pop(0),401109.1,2.47
+20000,deque.popleft,834.0,1.45
+40000,list.pop(0),2744983.5,6.84
+40000,deque.popleft,2790.6,3.35
+80000,list.pop(0),2920966.9,1.06
+80000,deque.popleft,13084.6,4.69
