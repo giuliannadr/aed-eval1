@@ -69,10 +69,12 @@ def guardar_y_mostrar(nombre, filas):
 
 
 def por_timestamp(evento):
+    """Clave de ordenamiento: el timestamp del evento."""
     return evento.timestamp
 
 
 def ordenar_con_sorted(lista, key):
+    """Envuelve sorted() con la misma firma que insercion y mergesort."""
     return sorted(lista, key=key)
 
 
