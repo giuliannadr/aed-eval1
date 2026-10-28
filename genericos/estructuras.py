@@ -43,6 +43,7 @@ class Cola:
         return self._datos[0]
 
     def __len__(self):
+        """Cantidad de elementos en la cola."""
         return len(self._datos)
 
 
@@ -93,4 +94,5 @@ class ColaPrioridad:
         return self._heap[0][2]
 
     def __len__(self):
+        """Cantidad de elementos en la cola."""
         return len(self._heap)

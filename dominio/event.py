@@ -61,11 +61,16 @@ class Event:
         if not isinstance(self.text, str):
             raise TypeError("text debe ser str")
 
+
 def clave_atencion(evento):
     """Clave de prioridad para atender incidentes (regla de negocio).
 
     Orden: primero el más grave, después el más antiguo, después el id.
     Se usa -priority porque heapq es un min-heap (saca el menor) y en
     la escala del caso 5 es lo más grave.
+
+    El id no representa antigüedad (los ids se generan mezclados): es
+    solo un desempate determinístico y reproducible para eventos con
+    igual prioridad y timestamp.
     """
     return (-evento.priority, evento.timestamp, evento.id)
