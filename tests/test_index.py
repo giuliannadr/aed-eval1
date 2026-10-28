@@ -54,6 +54,15 @@ class TestEventStore(unittest.TestCase):
         with self.assertRaises(TypeError):
             self.store.agregar("no es un evento")
 
+    def test_rango_bst_y_bisect_coinciden(self):
+        bst = self.store.buscar_por_rango(100, 300)
+        ordenado = self.store.buscar_por_rango_ordenado(100, 300)
+        # El BST no garantiza orden: se compara ordenando por id
+        self.assertEqual(sorted(bst, key=lambda e: e.id),
+                         sorted(ordenado, key=lambda e: e.id))
+        # El índice ordenado sí sale ordenado por timestamp
+        self.assertEqual([e.timestamp for e in ordenado], [100, 200, 300])
+
 
 if __name__ == "__main__":
     unittest.main()

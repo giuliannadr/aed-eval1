@@ -4,6 +4,10 @@ Las funciones trabajan con listas de valores comparables (por ejemplo,
 timestamps). Para buscar eventos se usan listas alineadas: una lista de
 claves ordenadas y otra de eventos en el mismo orden; el índice que
 devuelven estas funciones sirve para obtener el evento de la segunda.
+
+Cuando no encuentran el objetivo devuelven None (no -1): así es
+consistente con EventStore, y usar el resultado como índice sin
+chequearlo da error en vez de devolver en silencio el último elemento.
 """
 
 from bisect import bisect_left, bisect_right
@@ -16,12 +20,12 @@ def busqueda_secuencial(lista, objetivo):
     (cuando el objetivo no está o está al final).
 
     Returns:
-        int: índice de la primera aparición, o -1 si no está.
+        int | None: índice de la primera aparición, o None si no está.
     """
     for i, valor in enumerate(lista):   # enumerate da (índice, valor)
         if valor == objetivo:
             return i
-    return -1
+    return None
 
 
 def busqueda_binaria(lista, objetivo):
@@ -33,7 +37,7 @@ def busqueda_binaria(lista, objetivo):
     necesariamente el primero (para eso, usar busqueda_bisect).
 
     Returns:
-        int: índice de una aparición del objetivo, o -1 si no está.
+        int | None: índice de una aparición del objetivo, o None si no está.
     """
     bajo = 0
     alto = len(lista) - 1
@@ -46,7 +50,7 @@ def busqueda_binaria(lista, objetivo):
             bajo = medio + 1   # el objetivo está a la derecha del medio
         else:
             alto = medio - 1   # el objetivo está a la izquierda del medio
-    return -1
+    return None
 
 
 def busqueda_bisect(lista, objetivo):
@@ -56,14 +60,14 @@ def busqueda_bisect(lista, objetivo):
     busqueda_binaria, con repetidos devuelve siempre la primera aparición.
 
     Returns:
-        int: índice de la primera aparición, o -1 si no está.
+        int | None: índice de la primera aparición, o None si no está.
     """
     i = bisect_left(lista, objetivo)
     # i puede valer len(lista) si objetivo es mayor que todos: por eso se
     # chequea i < len(lista) antes de acceder a lista[i]
     if i < len(lista) and lista[i] == objetivo:
         return i
-    return -1
+    return None
 
 
 def rango_bisect(lista, desde, hasta):
@@ -80,4 +84,4 @@ def rango_bisect(lista, desde, hasta):
         raise ValueError("desde no puede ser mayor que hasta")
     inicio = bisect_left(lista, desde)
     fin = bisect_right(lista, hasta)   # right: después del último igual a hasta
-    return inicio, fin  
+    return inicio, fin
