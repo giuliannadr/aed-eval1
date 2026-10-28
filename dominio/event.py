@@ -60,3 +60,12 @@ class Event:
         # TextAnalyzer lo va a recorrer.
         if not isinstance(self.text, str):
             raise TypeError("text debe ser str")
+
+def clave_atencion(evento):
+    """Clave de prioridad para atender incidentes (regla de negocio).
+
+    Orden: primero el más grave, después el más antiguo, después el id.
+    Se usa -priority porque heapq es un min-heap (saca el menor) y en
+    la escala del caso 5 es lo más grave.
+    """
+    return (-evento.priority, evento.timestamp, evento.id)
