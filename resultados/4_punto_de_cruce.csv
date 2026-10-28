@@ -1,0 +1,9 @@
+k,caso,tiempo_us
+1,k secuenciales,244.6
+1,ordenar + k binarias,670.8
+10,k secuenciales,2579.5
+10,ordenar + k binarias,1389.8
+100,k secuenciales,23172.7
+100,ordenar + k binarias,1137.4
+1000,k secuenciales,293324.1
+1000,ordenar + k binarias,2674.3

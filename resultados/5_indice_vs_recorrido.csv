@@ -1,0 +1,17 @@
+n,caso,tiempo_us,cociente
+1000,id-dict,0.1,
+1000,id-secuencial,10.034,
+1000,categoria-index,0.65,
+1000,categoria-filtro,27.362,
+2000,id-dict,0.105,1.05
+2000,id-secuencial,5.972,0.6
+2000,categoria-index,1.661,2.56
+2000,categoria-filtro,80.508,2.94
+4000,id-dict,0.152,1.45
+4000,id-secuencial,10.272,1.72
+4000,categoria-index,3.471,2.09
+4000,categoria-filtro,141.268,1.75
+8000,id-dict,0.198,1.3
+8000,id-secuencial,337.069,32.81
+8000,categoria-index,12.786,3.68
+8000,categoria-filtro,365.329,2.59

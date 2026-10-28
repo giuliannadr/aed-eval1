@@ -32,6 +32,11 @@ class TestRouter(unittest.TestCase):
                    Event(2, 20, "red", 3, "x", "A", "B")]
         self.assertEqual(Router(eventos).vecinos("A"), ["B"])
 
+    def test_ciclo_no_entra_en_bucle(self):
+        self.router.agregar_ruta("C", "A")   # cierra el ciclo A -> B -> C -> A
+        self.assertEqual(len(self.router.distancias_bfs("A")), 4)
+        self.assertEqual(len(self.router.recorrido_dfs("A")), 4)
+
 
 if __name__ == "__main__":
     unittest.main()

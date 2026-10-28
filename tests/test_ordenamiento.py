@@ -47,6 +47,12 @@ class TestOrdenamiento(unittest.TestCase):
                 self.assertEqual(ordenar([]), [])
                 self.assertEqual(ordenar([7]), [7])
 
+    def test_ordenada_invertida_y_todos_iguales(self):
+        for lista in ([1, 2, 3, 4], [4, 3, 2, 1], [5, 5, 5, 5]):
+            for ordenar in ALGORITMOS:
+                with self.subTest(algoritmo=ordenar.__name__, lista=lista):
+                    self.assertEqual(ordenar(lista), sorted(lista))
+
 
 if __name__ == "__main__":
     unittest.main()
