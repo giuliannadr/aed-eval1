@@ -1,4 +1,5 @@
 from dominio.event import Event
+from genericos.avl import AVL
 from genericos.bst import BST
 from genericos.index import Index
 from genericos.indice_ordenado import IndiceOrdenado
@@ -14,13 +15,15 @@ class EventStore:
     - índices secundarios por category y origin (ver Index);
     - un BST por timestamp para consultas por rango;
     - una lista ordenada por timestamp (IndiceOrdenado) que resuelve la
-      misma consulta con bisect; convive con el BST para comparar ambas
-      estructuras sobre los mismos datos.
+      misma consulta con bisect;
+    - un AVL por timestamp (Parte 2): resuelve la misma consulta que el
+      BST, pero con altura O(log n) garantizada aunque los timestamps
+      lleguen ordenados (el peor caso del BST).
 
-    La lista y el dict por id guardan los mismos eventos, y el BST y el
-    índice ordenado resuelven la misma consulta: son redundancias
-    conscientes. Todas las estructuras guardan referencias al mismo
-    objeto, no copias, lo cual es seguro porque los eventos son inmutables.
+    El BST, el índice ordenado y el AVL resuelven la misma consulta:
+    son redundancias conscientes para comparar las tres estructuras
+    sobre los mismos datos. Todas guardan referencias al mismo objeto,
+    no copias, lo cual es seguro porque los eventos son inmutables.
 
     No permite eliminar eventos: son registros históricos inmutables,
     y así no hay que mantener la consistencia de los índices al borrar
@@ -34,14 +37,15 @@ class EventStore:
         self._por_origen = Index(key=lambda e: e.origin)
         self._por_timestamp = BST()
         self._por_timestamp_ordenado = IndiceOrdenado()
+        self._por_timestamp_avl = AVL()
 
     def agregar(self, evento):
         """Agrega un evento y actualiza todos los índices.
 
-        Costo: O(1) promedio para la lista y los dicts, más O(h) para el
-        BST (h = altura) y O(n) en general para el índice ordenado (O(1)
-        amortizado si los timestamps llegan en orden). Si los eventos
-        llegan ordenados por timestamp, el BST se degenera y h = n.
+        Costo: O(1) promedio para la lista y los dicts, O(h) para el BST
+        (h = n si los timestamps llegan ordenados), O(log n) para el AVL
+        y O(n) en general para el índice ordenado (O(1) amortizado si
+        llegan en orden).
 
         Raises:
             TypeError: si evento no es un Event.
@@ -60,6 +64,7 @@ class EventStore:
         self._por_origen.agregar(evento)
         self._por_timestamp.insertar(evento.timestamp, evento)
         self._por_timestamp_ordenado.agregar(evento.timestamp, evento)
+        self._por_timestamp_avl.insertar(evento.timestamp, evento)
 
     def buscar_por_id(self, id_evento):
         """Devuelve el evento con ese id, o None si no existe. O(1) promedio."""
@@ -86,13 +91,28 @@ class EventStore:
     def buscar_por_rango_ordenado(self, desde, hasta):
         """Igual que buscar_por_rango, pero con lista ordenada + bisect.
 
-        O(log n + k) y el resultado sale ordenado por timestamp. Existe
-        junto al BST para comparar las dos estructuras.
+        O(log n + k) y el resultado sale ordenado por timestamp.
 
         Raises:
             ValueError: si desde es mayor que hasta.
         """
         return self._por_timestamp_ordenado.buscar_rango(desde, hasta)
+
+    def buscar_por_rango_avl(self, desde, hasta):
+        """Igual que buscar_por_rango, pero con el AVL (Parte 2).
+
+        O(log n + k) en el peor caso (el BST es O(n + k) con datos
+        ordenados) y el resultado sale ordenado por timestamp.
+
+        Raises:
+            ValueError: si desde es mayor que hasta.
+        """
+        return self._por_timestamp_avl.buscar_rango(desde, hasta)
+
+    def altura_avl(self):
+        """Altura del AVL por timestamp. Se mantiene en O(log n) aunque los
+        timestamps lleguen ordenados (el peor caso del BST)."""
+        return self._por_timestamp_avl.altura()
 
     def todos(self):
         """Devuelve una copia de todos los eventos en orden de llegada. O(n)."""

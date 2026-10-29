@@ -2,9 +2,8 @@
 
 from collections import Counter
 
-# Palabras que indican un incidente de alerta. Las usa TextAnalyzer para
-# detectar alertas y el generador para fabricar textos de prueba:
-# al estar en un solo lugar, no se pueden desincronizar.
+from genericos.texto import kmp
+
 PALABRAS_ALERTA = ("caída", "falla", "urgente", "intrusión")
 
 
@@ -17,6 +16,10 @@ class TextAnalyzer:
 
     Limitación: separa por espacios, así que no detecta una alerta pegada
     a un signo de puntuación (ej. "falla,").
+
+    Parte 2: es_alerta_kmp busca las alertas como subcadenas con KMP, lo
+    que sí detecta "falla," o "fallas", a costa de poder dar falsos
+    positivos (ver docstring).
     """
 
     def __init__(self, palabras_alerta=PALABRAS_ALERTA):
@@ -38,3 +41,19 @@ class TextAnalyzer:
         for e in eventos:
             contador.update(e.text.lower().split())
         return contador
+
+    def es_alerta_kmp(self, texto):
+        """True si el texto contiene alguna alerta como SUBCADENA (KMP).
+
+        Busca cada alerta con KMP: O(a·(n + m)) por texto (a alertas, n
+        largo del texto, m largo de la alerta), sin retroceder en el texto.
+        Diferencia con es_alerta: busca subcadenas, no palabras completas,
+        así que detecta "falla," y "fallas" pero también "fallaron" o
+        "sinfalla" (posibles falsos positivos).
+        """
+        minusculas = texto.lower()
+        return any(kmp(minusculas, alerta)[0] for alerta in self._alertas if alerta)
+
+    def filtrar_alertas_kmp(self, eventos):
+        """Eventos cuyo texto contiene una alerta como subcadena (KMP)."""
+        return [e for e in eventos if self.es_alerta_kmp(e.text)]
