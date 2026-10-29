@@ -9,6 +9,8 @@ from genericos.estructuras import Cola, ColaPrioridad
 
 
 def main():
+    """Recorre el flujo completo: mesa de entrada, store, consultas,
+    atención por prioridad, red de rutas y alertas."""
     # 1. Llegan incidentes en orden de tiempo a la mesa de entrada (FIFO)
     eventos = generar_eventos(30, semilla=42, orden="ordenado")
     mesa_de_entrada = Cola()

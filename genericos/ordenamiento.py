@@ -8,6 +8,7 @@ saldrían falsamente bajos.
 
 
 def _identidad(x):
+    """Key por defecto: compara cada valor tal cual. O(1)."""
     return x
 
 

@@ -29,6 +29,14 @@ class Event:
     destination: str
 
     def __post_init__(self):
+        """Valida los atributos al crear el evento.
+
+        Raises:
+            TypeError: si algún atributo no tiene el tipo esperado.
+            ValueError: si timestamp es negativo, priority está fuera de
+                1-5 o category/origin/destination están vacíos o tienen
+                espacios en los costados.
+        """
         if not isinstance(self.id, int):
             raise TypeError("id debe ser int")
 
